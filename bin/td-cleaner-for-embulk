@@ -1,0 +1,61 @@
+#!/usr/local/bin/zsh
+
+local -A opthash
+zparseopts -D -M -A opthash -- \
+   h -help=h \
+   x -exec=x \
+   p: -process:=p \
+   d: -database:=d
+
+local filterdb=".*"
+local filtertbl="_embulk_[0-9]{8}_[0-9]{6}_[0-9]*"
+local key="${TD_API_KEY}"
+local cmd=":"
+
+local helpmsg=$(cat <<-__HELP__
+$(basename ${0}):
+  Drop embulk remnant tables.
+
+USAGE:
+  ${0} [-h|--help] [-x|--exec] [-d|--database <DBName>]
+
+OPTIONS:
+  -h|--help                  print this.
+  -x|--exec                  execute drop remnants.
+  -p|--process <NOP>         specify number of process.
+  -d|--database <DBName>     specify databse. (default: all allowed)
+__HELP__
+)
+
+case "$(uname)" in
+    'Darwin')
+        local multiproc=$(system_profiler SPHardwareDataType | grep 'Total Number of Cores' | awk '{print $NF}')
+        local multiproc=$(echo "${multiproc} * 2" | bc)
+        ;;
+    *)
+        local multiproc='4'
+        ;;
+esac
+
+function check_cmd_require() {
+    if [ ! -e "$(which ${2})" ]; then
+        echo "$(basename ${1}): command not found: ${2}" >&2
+        exit 1
+    fi
+}
+
+[[ -n "${opthash[(i)-h]}" ]] && echo "${helpmsg}" && exit 0
+[[ -n "${opthash[(i)-d]}" ]] && filterdb="${opthash[-d]}"
+[[ -n "${opthash[(i)-p]}" ]] && [[ ${opthash[-p]} =~ ^[0-9]+$ ]] && multiproc="${opthash[-p]}"
+[[ -n "${opthash[(i)-x]}" ]] && cmd="xargs -L 1 td -k "${key}" table:delete --force"
+
+check_cmd_require "${0}" "jq"
+check_cmd_require "${0}" "td"
+
+td -k "${key}" db:list -f json 2>/dev/null \
+    | jq -r ".[] | select(.Name | test(\"${filterdb}\")).Name" \
+    | xargs -L 1 -P ${multiproc} td -k "${key}" table:list -f json 2>/dev/null \
+    | jq -r ".[] | select(.Table | test(\"${filtertbl}\")) | .Database, .Table" \
+    | awk '{if(NR%2!=0) ORS=" "; else ORS="\n"; print $0;}' \
+    | tee /dev/stderr \
+    | eval "${cmd}"

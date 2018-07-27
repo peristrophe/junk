@@ -1,0 +1,69 @@
+#!/usr/local/bin/zsh
+
+local -A opthash
+zparseopts -D -M -A opthash -- \
+   h -help=h \
+   v -verbose=v \
+   t -table=t \
+   p: -process:=p \
+   d: -database:=d
+
+local keyword="${1}"
+local filterdb="^studysapuri"
+local key="${TD_API_KEY}"
+local target="Schema"
+local attributes=" | .Database, .Table"
+local cmd="awk '{if(NR%2!=0) ORS=\" \"; else ORS=\"\n\"; print \$0;}'"
+
+local helpmsg=$(cat <<-__HELP__
+$(basename ${0}):
+  Search column name from Treasure Data (Plazma DB).
+
+USAGE:
+  ${0} [-h|--help] [-v|--verbose] [-t|--table]
+       [-p|--process <NOP>] [-d|--database <DBName>]
+       <SearchKeyWord>
+
+OPTIONS:
+  -h|--help                  print this.
+  -v|--verbose               print verbose result.
+  -h|--table                 search from table name.
+  -p|--process <NOP>         specify number of process.
+  -d|--database <DBName>     specify databse. (default: studysapuri*)
+__HELP__
+)
+
+case "$(uname)" in
+    'Darwin')
+        local multiproc=$(system_profiler SPHardwareDataType | grep 'Total Number of Cores' | awk '{print $NF}')
+        local multiproc=$(echo "${multiproc} * 2" | bc)
+        ;;
+    *)
+        local multiproc='4'
+        ;;
+esac
+
+function check_cmd_require() {
+    if [ ! -e "$(which ${2})" ]; then
+        echo "$(basename ${1}): command not found: ${2}" >&2
+        exit 1
+    fi
+}
+
+[[ -n "${opthash[(i)-h]}" ]] && echo "${helpmsg}" && exit 0
+[[ -n "${opthash[(i)-v]}" ]] && cmd="jq -s" && attributes=""
+[[ -n "${opthash[(i)-t]}" ]] && target="Table"
+[[ -n "${opthash[(i)-d]}" ]] && filterdb="${opthash[-d]}"
+[[ -n "${opthash[(i)-d]}" ]] && [ "${opthash[-d]}" == 'all' ] && filterdb=".*"
+[[ -n "${opthash[(i)-p]}" ]] && [[ ${opthash[-p]} =~ ^[0-9]+$ ]] && multiproc="${opthash[-p]}"
+
+[ $# -lt 1 ] && echo 'error: too few arguments.' >&2 && exit 1
+
+check_cmd_require "${0}" "jq"
+check_cmd_require "${0}" "td"
+
+td -k "${key}" db:list -f json \
+    | jq -r ".[] | select(.Name | test(\"${filterdb}\")).Name" \
+    | xargs -L 1 -P ${multiproc} td -k "${key}" table:list -f json \
+    | jq -r ".[] | select(.${target} | test(\"${keyword}\"))${attributes}" \
+    | eval "${cmd}"
