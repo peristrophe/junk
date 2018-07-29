@@ -47,7 +47,7 @@ function check_cmd_require() {
 [[ -n "${opthash[(i)-h]}" ]] && echo "${helpmsg}" && exit 0
 [[ -n "${opthash[(i)-d]}" ]] && filterdb="${opthash[-d]}"
 [[ -n "${opthash[(i)-p]}" ]] && [[ ${opthash[-p]} =~ ^[0-9]+$ ]] && multiproc="${opthash[-p]}"
-[[ -n "${opthash[(i)-x]}" ]] && cmd="xargs -L 1 td -k "${key}" table:delete --force"
+[[ -n "${opthash[(i)-x]}" ]] && cmd="xargs -L 1 -P ${multiproc} td -k "${key}" table:delete --force"
 
 check_cmd_require "${0}" "jq"
 check_cmd_require "${0}" "td"
