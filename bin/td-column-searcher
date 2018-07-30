@@ -50,14 +50,14 @@ function check_cmd_require() {
     fi
 }
 
-[[ -n "${opthash[(i)-h]}" ]] && echo "${helpmsg}" && exit 0
+[[ -n "${opthash[(i)-h]}" ]] && echo "${helpmsg}" >&2 && exit 0
 [[ -n "${opthash[(i)-v]}" ]] && cmd="jq -s" && attributes=""
 [[ -n "${opthash[(i)-t]}" ]] && target="Table"
 [[ -n "${opthash[(i)-d]}" ]] && filterdb="${opthash[-d]}"
 [[ -n "${opthash[(i)-d]}" ]] && [ "${opthash[-d]}" == 'all' ] && filterdb=".*"
 [[ -n "${opthash[(i)-p]}" ]] && [[ ${opthash[-p]} =~ ^[0-9]+$ ]] && multiproc="${opthash[-p]}"
 
-[ $# -lt 1 ] && echo 'error: too few arguments.' >&2 && exit 1
+[ $# -lt 1 ] && echo 'error: too few arguments.' >&2 && echo "${helpmsg}" >&2 && exit 1
 
 check_cmd_require "${0}" "jq"
 check_cmd_require "${0}" "td"
