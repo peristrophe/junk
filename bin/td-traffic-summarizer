@@ -1,0 +1,66 @@
+#!/usr/local/bin/zsh
+
+local -A opthash
+zparseopts -D -M -A opthash -- \
+   h -help=h \
+   s: -start-page:=s \
+   e: -end-page:=e \
+   d: -duration:=d \
+   p: -process:=p
+
+local key="${TD_API_KEY}"
+local startpage=0
+local endpage=200
+local duration=0
+
+local helpmsg=$(cat <<-__HELP__
+$(basename ${0}):
+  Drop embulk remnant tables.
+
+USAGE:
+  ${0} [-h|--help] [-s|--start-page <PageNumber>] [-e|--end-page <PageNumber>]
+       [-d|--duration <Sec>] [-p|--process <NOP>]
+
+OPTIONS:
+  -h|--help                  print this.
+  -s|--start-page            specify start page number.
+  -e|--end-page              specify end page number.
+  -d|--duration <Sec>        specify job duration by seconds.
+  -p|--process <NOP>         specify number of process.
+__HELP__
+)
+
+case "$(uname)" in
+    'Darwin')
+        local multiproc=$(system_profiler SPHardwareDataType | grep 'Total Number of Cores' | awk '{print $NF}')
+        local multiproc=$(echo "${multiproc} * 2" | bc)
+        ;;
+    *)
+        local multiproc='4'
+        ;;
+esac
+
+function check_cmd_require() {
+    if [ ! -e "$(which ${2})" ]; then
+        echo "$(basename ${1}): command not found: ${2}" >&2
+        exit 1
+    fi
+}
+
+[[ -n "${opthash[(i)-h]}" ]] && echo "${helpmsg}" && exit 0
+[[ -n "${opthash[(i)-p]}" ]] && [[ ${opthash[-p]} =~ ^[0-9]+$ ]] && multiproc="${opthash[-p]}"
+[[ -n "${opthash[(i)-s]}" ]] && [[ ${opthash[-s]} =~ ^[0-9]+$ ]] && startpage="${opthash[-s]}"
+[[ -n "${opthash[(i)-e]}" ]] && [[ ${opthash[-e]} =~ ^[0-9]+$ ]] && endpage="${opthash[-e]}"
+[[ -n "${opthash[(i)-d]}" ]] && [[ ${opthash[-d]} =~ ^[0-9]+$ ]] && duration="${opthash[-d]}"
+
+check_cmd_require "${0}" "jq"
+check_cmd_require "${0}" "td"
+
+seq ${startpage} ${endpage} \
+    | xargs -I{} -L1 -P${multiproc} td -k "${key}" job:list --slow ${duration} -f json -p {} \
+    | jq -r '.[] | select(.Type | test("(presto|hive)")) | .Start' \
+    | awk '{if(NF>0) print $0}' \
+    | cut -c 1-13 \
+    | sort \
+    | uniq -c \
+    | awk 'BEGIN{print "date,hour,jobs"}{print $2 "," $3 "," $1}'

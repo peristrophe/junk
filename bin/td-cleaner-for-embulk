@@ -17,7 +17,8 @@ $(basename ${0}):
   Drop embulk remnant tables.
 
 USAGE:
-  ${0} [-h|--help] [-x|--exec] [-d|--database <DBName>]
+  ${0} [-h|--help] [-x|--exec]
+       [-p|--process <NOP>] [-d|--database <DBName>]
 
 OPTIONS:
   -h|--help                  print this.
