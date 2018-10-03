@@ -1,0 +1,32 @@
+<html>
+  <head>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['timeline']});
+      google.charts.setOnLoadCallback(drawChart);
+      function drawChart() {
+        var query = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1BpZUfLe3ditPTkIfGQOxZtR1jXgAVOz-y2Lg1-zUoI4/edit?usp=sharing');
+        query.send(handleQueryResponse);
+      }
+
+      function handleQueryResponse(response) {
+        var dataTable = response.getDataTable();
+        var container = document.getElementById('timeline');
+        var chart = new google.visualization.Timeline(container);
+
+        var options = {
+	  timeline: {
+	    groupByRowLabel: false,
+	    singleColor: '#8d8'
+	  },
+	  //backgroundColor: '#ffd'
+        };
+
+        chart.draw(dataTable, options);
+      }
+    </script>
+  </head>
+  <body>
+    <div id="timeline" style="height: 100%;"></div>
+  </body>
+</html>
