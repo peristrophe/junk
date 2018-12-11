@@ -73,7 +73,7 @@ async def fetch_job_history(session, payload):
             return json.loads(await res.text())
 
 
-async def aio_supervisor(pagesize=200, concurrency=5, limit=100000):
+async def fetch_active_users(pagesize=200, concurrency=5, limit=100000):
     async with aiohttp.ClientSession() as session:
         payloads = [ {'from': i, 'to': i+pagesize-1} for i in range(0, limit, pagesize) ]
 
@@ -138,11 +138,12 @@ def fetch(**kwargs):
     subargs = dict(filter(lambda x: x[0] in necessary_keys, kwargs.items()))
 
     loop = asyncio.get_event_loop()
-    active_users = loop.run_until_complete(aio_supervisor(**subargs))
+    active_users = loop.run_until_complete(fetch_active_users(**subargs))
 
     if kwargs.get('inverse', False):
         # return inactive user list
         return list(filter(lambda x: x.get('name') not in active_users, users_info.get('users')))
+
     else:
         # return active user list
         return list(filter(lambda x: x.get('name') in active_users, users_info.get('users')))
@@ -158,10 +159,10 @@ if __name__ == '__main__':
              )
 
     parser.add_argument('-v', '--verbose', action='store_true', default=False, help='print progress log.')
-    parser.add_argument('-r', '--inverse', action='store_true', default=False, help='list up inactive users.')
-    parser.add_argument('-i', '--interval-days', type=int, default=30, help='period of threshold that active or inactive.')
+    parser.add_argument('-r', '--inverse', action='store_true', default=False, help='listing up inactive users.')
+    parser.add_argument('-i', '--interval-days', type=int, default=30, help='threshold that active or inactive.')
     parser.add_argument('-p', '--page-size', type=int, default=200, help='number of entries per api request.')
-    parser.add_argument('-l', '--limit', type=int, default=100000, help='max entries that api requests.')
+    parser.add_argument('-l', '--limit', type=int, default=300000, help='max entries that api requests.')
     parser.add_argument('-c', '--concurrency', type=int, default=5, help='number of concurrent run.')
     args = parser.parse_args()
 
