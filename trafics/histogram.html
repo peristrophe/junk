@@ -17,7 +17,9 @@
         var options = {
 	  title: 'histogram of job wait time in queue',
 	  legend: { position: 'none' },
-	  //backgroundColor: '#ffd'
+	  histogram: {
+	    bucketSize: 10
+	  }
         };
 
         chart.draw(dataTable, options);
