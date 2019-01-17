@@ -107,11 +107,11 @@ class WorkflowUtil:
         '''\
         Run workflow.
         * you must specify argument either '_id' or 'names'.
-        * workflow-id is renumbering when update a project, so i suggest specify 'names'.
+        * workflow-id is renumbering when update a project, so i suggest specify 'names' if use this on ci/cd environment.
 
         Args:
-            _id   (int|str):   id of workflow that you want run.
-            names (str):       names of workflow that you want run. it is project-name and workflow-name separated by dot.
+            _id   (int|str):   identifier of workflow want to run.
+            names (str):       names of workflow want to run. it is project-name and workflow-name separated by dot.
             wait  (bool):      True: Work synchronously / False: Work asynchronously (wait workflow complete when specify True)
 
         Returns:
