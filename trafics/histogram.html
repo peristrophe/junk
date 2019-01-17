@@ -1,0 +1,28 @@
+<html>
+  <head>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['corechart']});
+      google.charts.setOnLoadCallback(drawChart);
+      function drawChart() {
+        var query = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1MYy2-oOc3lS_TFZHNwvZLCI5JFBAIrmPSRXZFPhGv94/edit?usp=sharing');
+        query.send(handleQueryResponse);
+      }
+
+      function handleQueryResponse(response) {
+        var dataTable = response.getDataTable();
+        var container = document.getElementById('histogram');
+        var chart = new google.visualization.Histogram(container);
+
+        var options = {
+	  //backgroundColor: '#ffd'
+        };
+
+        chart.draw(dataTable, options);
+      }
+    </script>
+  </head>
+  <body>
+    <div id="histogram" style="height: 100%;"></div>
+  </body>
+</html>
