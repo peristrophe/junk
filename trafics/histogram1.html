@@ -1,0 +1,48 @@
+<html>
+  <head>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['corechart']});
+      google.charts.setOnLoadCallback(drawChart);
+      function drawChart() {
+        var query = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1f18SvdM3_JHVM8wBhk7I7d0-Kp31tMWFIWfXr7LHfPk/edit?gid=2119660784&usp=sharing');
+        query.send(handleQueryResponse);
+      }
+
+      function handleQueryResponse(response) {
+        var dataTable = response.getDataTable();
+        var container = document.getElementById('histogram');
+        var chart = new google.visualization.Histogram(container);
+
+        var options = {
+          title: '2019-01-15   09:00:00 - 21:59:59',
+          legend: { position: 'none' },
+          hAxis: {
+            title: 'queued time',
+            //showTextEvery: 2,
+            //viewWindow: {
+            //  max: 300,
+            //},
+          },
+          vAxis: {
+            //format: 'decimal',
+            scaleType: 'mirrorLog',
+          },
+          histogram: {
+            //bucketSize: 10,
+            hideBucketItems: true,
+            minValue: 0,
+            //maxValue: 100,
+          },
+
+          dataOpacity: 0.8,
+        };
+
+        chart.draw(dataTable, options);
+      }
+    </script>
+  </head>
+  <body>
+    <div id="histogram" style="height: 100%; width: 100%;"></div>
+  </body>
+</html>
