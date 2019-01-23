@@ -4,8 +4,12 @@
     <script type="text/javascript">
       google.charts.load('current', {'packages':['corechart']});
       google.charts.setOnLoadCallback(drawChart);
+
       function drawChart() {
-        var query = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1f18SvdM3_JHVM8wBhk7I7d0-Kp31tMWFIWfXr7LHfPk/edit?gid=2119660784&usp=sharing');
+        var query = new google.visualization.Query(
+			  'https://docs.google.com/spreadsheets/d/' +
+			  '1OlyRxfOQZ2eAVXyVW9PHg8GQjDf9i3UGnJnJH98Ayv4' +
+			  '/edit?usp=sharing');
         query.send(handleQueryResponse);
       }
 
@@ -15,7 +19,7 @@
         var chart = new google.visualization.Histogram(container);
 
         var options = {
-          title: '2019-01-15 / 09:00:00 - 21:59:59',
+          title: '10分以上待機したprestoジョブの時間帯分布 (システムユーザー以外)',
           legend: { position: 'none' },
           chartArea: {
             left: '10%',
@@ -24,7 +28,7 @@
             height: '80%',
           },
           hAxis: {
-            title: 'queued time',
+            title: 'created hour',
             //showTextEvery: 2,
             //viewWindow: {
             //  max: 300,
@@ -32,13 +36,13 @@
           },
           vAxis: {
             //format: 'decimal',
-            scaleType: 'mirrorLog',
+            //scaleType: 'mirrorLog',
           },
           histogram: {
-            //bucketSize: 10,
+            bucketSize: 1,
             hideBucketItems: true,
-            minValue: 0,
-            //maxValue: 100,
+            minValue: 9,
+            maxValue: 21,
           },
 
           dataOpacity: 0.8,

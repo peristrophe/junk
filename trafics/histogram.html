@@ -4,8 +4,26 @@
     <script type="text/javascript">
       google.charts.load('current', {'packages':['corechart']});
       google.charts.setOnLoadCallback(drawChart);
+
+      function parseGetParams() {
+        if(window.location.search === "") return;
+        const variables = window.location.search.split("?")[1].split("&");
+        const obj = {};
+        variables.forEach(function(v, i) {
+            const variable = v.split("=");
+            obj[variable[0]] = variable[1];
+        });
+        return obj;
+      }
+
+      params = parseGetParams();
+      console.log(params);
+
       function drawChart() {
-        var query = new google.visualization.Query('https://docs.google.com/spreadsheets/d/1f18SvdM3_JHVM8wBhk7I7d0-Kp31tMWFIWfXr7LHfPk/edit?gid=800553782&usp=sharing');
+        var query = new google.visualization.Query(
+                          'https://docs.google.com/spreadsheets/d/' +
+                          '1f18SvdM3_JHVM8wBhk7I7d0-Kp31tMWFIWfXr7LHfPk' +
+                          '/edit?gid=' + params['gid'] + '&usp=sharing');
         query.send(handleQueryResponse);
       }
 
@@ -15,7 +33,7 @@
         var chart = new google.visualization.Histogram(container);
 
         var options = {
-          title: '2019-01-07 / 09:00:00 - 21:59:59',
+          title: decodeURIComponent(params['title']),
           legend: { position: 'none' },
           chartArea: {
             left: '10%',
